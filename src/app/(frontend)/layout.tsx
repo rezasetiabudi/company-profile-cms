@@ -3,11 +3,13 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
+import { siteConfig } from '@/site.config'
+import { generateColorScale } from '@/lib/color-utils'
 import '@/app/globals.css'
 
 export const metadata: Metadata = {
-  title: 'PT Nusantara Fiber Konektifitas',
-  description: 'Penyedia layanan fiber core network, connectivity, dan retail internet terpercaya',
+  title: siteConfig.name,
+  description: siteConfig.description,
 }
 
 export default async function FrontendLayout({
@@ -24,14 +26,27 @@ export default async function FrontendLayout({
     console.error('Failed to fetch site settings:', error)
   }
 
-  const siteName = siteSettings?.siteName || 'PT Nusantara Fiber Konektifitas'
+  const siteName = siteSettings?.siteName || siteConfig.name
   const logo = siteSettings?.logo && typeof siteSettings.logo === 'object' && siteSettings.logo !== null
     ? siteSettings.logo.url
     : null
 
+  // Generate color scales from config hex values for CSS custom properties
+  const primaryScale = generateColorScale(siteConfig.theme.colorPrimary)
+  const accentScale = generateColorScale(siteConfig.theme.colorAccent)
+
+  const cssVariables = {
+    ...Object.fromEntries(
+      Object.entries(primaryScale).map(([stop, value]) => [`--color-primary-${stop}`, value] as const)
+    ),
+    ...Object.fromEntries(
+      Object.entries(accentScale).map(([stop, value]) => [`--color-accent-${stop}`, value] as const)
+    ),
+  }
+
   return (
     <html lang="id">
-      <body>
+      <body style={cssVariables as React.CSSProperties}>
         <div className="min-h-screen flex flex-col">
           <Navbar siteName={siteName} logo={logo} />
           <main className="flex-grow">{children}</main>

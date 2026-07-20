@@ -29,7 +29,7 @@ export function Navbar({ siteName, logo }: NavbarProps) {
                 <img src={logo} alt={siteName} className="h-10 w-auto" />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-accent-400 to-accent-600 rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-sm">NF</span>
+                  <span className="text-white font-bold text-sm">{siteName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</span>
                 </div>
               )}
               <span className="font-heading font-bold text-xl text-white tracking-tight">{siteName}</span>
@@ -51,7 +51,7 @@ export function Navbar({ siteName, logo }: NavbarProps) {
               href="/services"
               className="ml-4 bg-accent-500 hover:bg-accent-600 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors shadow-md"
             >
-              Hubungi Kami
+              Contact Us
             </Link>
           </div>
 
@@ -93,7 +93,7 @@ export function Navbar({ siteName, logo }: NavbarProps) {
               className="block mt-4 bg-accent-500 hover:bg-accent-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors text-center shadow-md"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Hubungi Kami
+              Contact Us
             </Link>
           </div>
         </div>

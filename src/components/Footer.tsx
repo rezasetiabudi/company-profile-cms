@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 
 interface FooterProps {
   siteName: string
@@ -7,6 +9,7 @@ interface FooterProps {
   email?: string | null
   address?: string | null
   socialMedia?: Array<{ platform: string; url: string }> | null
+  services?: Array<{ title: string; slug: string }> | null
 }
 
 function SocialIcon({ platform }: { platform: string }) {
@@ -45,7 +48,62 @@ function SocialIcon({ platform }: { platform: string }) {
   )
 }
 
-export function Footer({ siteName, phone, email, address, socialMedia }: FooterProps) {
+// Async server component to fetch services for footer links
+async function FooterServicesLinks() {
+  const payload = await getPayload({ config })
+
+  let services: any[] = []
+  try {
+    const result = await payload.find({
+      collection: 'services',
+      sort: 'order',
+      limit: 4,
+    })
+    services = result.docs
+  } catch (error) {
+    console.error('Failed to fetch services for footer:', error)
+  }
+
+  return (
+    <>
+      {services.length > 0 ? (
+        <>
+          {services.slice(0, 4).map((service) => (
+            <li key={service.id}>
+              <Link
+                href={`/services/${service.slug}`}
+                className="text-primary-300 hover:text-white transition-colors text-sm"
+              >
+                {service.title}
+              </Link>
+            </li>
+          ))}
+          {services.length > 4 && (
+            <li>
+              <Link
+                href="/services"
+                className="text-primary-300 hover:text-white transition-colors text-sm"
+              >
+                View All Services
+              </Link>
+            </li>
+          )}
+        </>
+      ) : (
+        <li>
+          <Link
+            href="/services"
+            className="text-primary-300 hover:text-white transition-colors text-sm"
+          >
+            Our Services
+          </Link>
+        </li>
+      )}
+    </>
+  )
+}
+
+export async function Footer({ siteName, phone, email, address, socialMedia }: FooterProps) {
   return (
     <footer className="bg-primary-950 text-white">
       {/* Main footer */}
@@ -55,7 +113,7 @@ export function Footer({ siteName, phone, email, address, socialMedia }: FooterP
           <div className="lg:col-span-1">
             <h3 className="text-xl font-heading font-bold mb-4 tracking-tight">{siteName}</h3>
             <p className="text-primary-300 text-sm leading-relaxed mb-6">
-              Penyedia layanan fiber core network, connectivity, dan retail internet terpercaya di Indonesia.
+              Professional solutions for your business needs.
             </p>
             {socialMedia && socialMedia.length > 0 && (
               <div className="flex space-x-3">
@@ -77,26 +135,26 @@ export function Footer({ siteName, phone, email, address, socialMedia }: FooterP
 
           {/* Navigation */}
           <div>
-            <h4 className="text-sm font-semibold text-accent-400 uppercase tracking-wider mb-4">Navigasi</h4>
+            <h4 className="text-sm font-semibold text-accent-400 uppercase tracking-wider mb-4">Navigation</h4>
             <ul className="space-y-3">
               <li>
                 <Link href="/" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Beranda
+                  Home
                 </Link>
               </li>
               <li>
                 <Link href="/about-us" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Tentang Kami
+                  About Us
                 </Link>
               </li>
               <li>
                 <Link href="/services" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Layanan
+                  Services
                 </Link>
               </li>
               <li>
                 <Link href="/artikel" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Artikel
+                  Articles
                 </Link>
               </li>
               <li>
@@ -109,34 +167,15 @@ export function Footer({ siteName, phone, email, address, socialMedia }: FooterP
 
           {/* Services Quick Links */}
           <div>
-            <h4 className="text-sm font-semibold text-accent-400 uppercase tracking-wider mb-4">Layanan</h4>
+            <h4 className="text-sm font-semibold text-accent-400 uppercase tracking-wider mb-4">Services</h4>
             <ul className="space-y-3">
-              <li>
-                <Link href="/services" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Fiber to the Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/services" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Dedicated Internet Access
-                </Link>
-              </li>
-              <li>
-                <Link href="/services" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Metro Ethernet
-                </Link>
-              </li>
-              <li>
-                <Link href="/services" className="text-primary-300 hover:text-white transition-colors text-sm">
-                  Dark Fiber
-                </Link>
-              </li>
+              <FooterServicesLinks />
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-sm font-semibold text-accent-400 uppercase tracking-wider mb-4">Hubungi Kami</h4>
+            <h4 className="text-sm font-semibold text-accent-400 uppercase tracking-wider mb-4">Contact Us</h4>
             <ul className="space-y-4 text-primary-300 text-sm">
               {phone && (
                 <li className="flex items-start space-x-3">
@@ -174,7 +213,7 @@ export function Footer({ siteName, phone, email, address, socialMedia }: FooterP
       <div className="border-t border-primary-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-primary-400 text-sm">&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p>
-          <p className="text-primary-500 text-xs">Koneksi Tanpa Batas untuk Indonesia</p>
+          <p className="text-primary-500 text-xs">{siteName}</p>
         </div>
       </div>
     </footer>

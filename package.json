@@ -1,13 +1,17 @@
 {
-  "name": "compro-fiber",
+  "name": "compro-template",
   "version": "1.0.0",
-  "description": "Company Profile - PT Nusantara Fiber Konektifitas",
+  "description": "Generic Company Profile Starter Template — Payload CMS + Next.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx src/seed.ts",
+    "seed:generic": "cross-env PRESET=generic tsx src/seed.ts",
+    "seed:hospital": "cross-env PRESET=hospital tsx src/seed.ts",
+    "seed:construction": "cross-env PRESET=construction tsx src/seed.ts",
+    "seed:list": "cross-env PRESET=list tsx src/seed.ts",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap"
   },

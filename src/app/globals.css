@@ -1,31 +1,33 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Primary: Deep navy/blue — trust, enterprise, network feel */
-  --color-primary-50: oklch(0.97 0.01 250);
-  --color-primary-100: oklch(0.93 0.02 250);
-  --color-primary-200: oklch(0.86 0.04 250);
-  --color-primary-300: oklch(0.75 0.06 250);
-  --color-primary-400: oklch(0.62 0.08 250);
-  --color-primary-500: oklch(0.50 0.10 250);
-  --color-primary-600: oklch(0.42 0.12 250);
-  --color-primary-700: oklch(0.34 0.10 250);
-  --color-primary-800: oklch(0.26 0.08 250);
-  --color-primary-900: oklch(0.18 0.05 250);
-  --color-primary-950: oklch(0.12 0.03 250);
+  /* Primary color scale — default fallback values;
+     overridden per-deployment via CSS custom properties injected by layout.tsx */
+  --color-primary-50: var(--color-primary-50, oklch(0.97 0.01 250));
+  --color-primary-100: var(--color-primary-100, oklch(0.93 0.02 250));
+  --color-primary-200: var(--color-primary-200, oklch(0.86 0.04 250));
+  --color-primary-300: var(--color-primary-300, oklch(0.75 0.06 250));
+  --color-primary-400: var(--color-primary-400, oklch(0.62 0.08 250));
+  --color-primary-500: var(--color-primary-500, oklch(0.50 0.10 250));
+  --color-primary-600: var(--color-primary-600, oklch(0.42 0.12 250));
+  --color-primary-700: var(--color-primary-700, oklch(0.34 0.10 250));
+  --color-primary-800: var(--color-primary-800, oklch(0.26 0.08 250));
+  --color-primary-900: var(--color-primary-900, oklch(0.18 0.05 250));
+  --color-primary-950: var(--color-primary-950, oklch(0.12 0.03 250));
 
-  /* Accent: Cyan/teal — fiber optic, speed, connectivity */
-  --color-accent-50: oklch(0.97 0.015 190);
-  --color-accent-100: oklch(0.93 0.03 190);
-  --color-accent-200: oklch(0.86 0.06 190);
-  --color-accent-300: oklch(0.76 0.09 190);
-  --color-accent-400: oklch(0.66 0.12 190);
-  --color-accent-500: oklch(0.56 0.14 190);
-  --color-accent-600: oklch(0.48 0.12 190);
-  --color-accent-700: oklch(0.40 0.10 190);
-  --color-accent-800: oklch(0.32 0.08 190);
-  --color-accent-900: oklch(0.24 0.06 190);
-  --color-accent-950: oklch(0.16 0.03 190);
+  /* Accent color scale — default fallback values;
+     overridden per-deployment via CSS custom properties injected by layout.tsx */
+  --color-accent-50: var(--color-accent-50, oklch(0.97 0.015 190));
+  --color-accent-100: var(--color-accent-100, oklch(0.93 0.03 190));
+  --color-accent-200: var(--color-accent-200, oklch(0.86 0.06 190));
+  --color-accent-300: var(--color-accent-300, oklch(0.76 0.09 190));
+  --color-accent-400: var(--color-accent-400, oklch(0.66 0.12 190));
+  --color-accent-500: var(--color-accent-500, oklch(0.56 0.14 190));
+  --color-accent-600: var(--color-accent-600, oklch(0.48 0.12 190));
+  --color-accent-700: var(--color-accent-700, oklch(0.40 0.10 190));
+  --color-accent-800: var(--color-accent-800, oklch(0.32 0.08 190));
+  --color-accent-900: var(--color-accent-900, oklch(0.24 0.06 190));
+  --color-accent-950: var(--color-accent-950, oklch(0.16 0.03 190));
 
   /* Typography */
   --font-heading: "Inter", ui-sans-serif, system-ui, sans-serif;
