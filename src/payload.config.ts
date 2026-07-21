@@ -5,7 +5,6 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import sharp from 'sharp'
-
 dotenv.config()
 
 import { Users } from './collections/Users'
@@ -25,6 +24,22 @@ export default buildConfig({
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    livePreview: {
+      url: ({ data, collectionConfig }) => {
+        const base = `http://localhost:3000`
+
+        if (collectionConfig?.slug ==='posts') return `${base}/${data.type}/${data.slug}`
+        if (collectionConfig?.slug ==='pages') return `${base}/${data.slug}`
+        return `${base}/${collectionConfig?.slug}/${data.slug}`
+
+      },
+      collections: ['pages','posts','services'],
+      breakpoints: [
+        { name: 'mobile', label: 'Mobile', width: 375, height: 667 },
+        { name: 'tablet', label: 'Tablet', width: 768, height: 1024 },
+        { name: 'desktop', label: 'Desktop', width: 1440, height: 900 },
+      ],
     },
   },
   collections: [Users, Media, Categories, Services, Posts, Pages],

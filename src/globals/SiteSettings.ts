@@ -2,6 +2,11 @@ import type { GlobalConfig } from 'payload'
 
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
+  admin: {
+    livePreview: {
+      url: 'http://localhost:3000'
+    },
+  },
   access: {
     read: () => true,
   },

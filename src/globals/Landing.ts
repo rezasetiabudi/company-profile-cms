@@ -2,6 +2,11 @@ import type { GlobalConfig } from 'payload'
 
 export const Landing: GlobalConfig = {
   slug: 'landing',
+  admin: {
+    livePreview: {
+      url: 'http://localhost:3000'
+    },
+  },
   access: {
     read: () => true,
   },

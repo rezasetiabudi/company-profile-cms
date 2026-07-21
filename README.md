@@ -46,6 +46,15 @@ By default, `setup.sh` seeds the database with the **generic** preset. You can s
 ./setup.sh hospital
 ```
 
+To reset and re-seed the database later:
+
+```bash
+pnpm db:reset            # drop & recreate the database
+pnpm reseed              # reset + seed with default preset
+pnpm reseed:hospital     # reset + seed with hospital preset
+pnpm reseed:construction # reset + seed with construction preset
+```
+
 Visit `http://localhost:3000` for the public site and `http://localhost:3000/admin` for the Payload CMS admin panel.
 
 **Default admin credentials:**
@@ -85,7 +94,12 @@ The template includes a preset system to easily swap example content for differe
 npm run seed:list
 
 # Seed a specific preset
-npm run seed --preset hospital
+npm run seed:hospital
+
+# Reset database and re-seed
+pnpm reseed                    # default preset
+pnpm reseed:hospital
+pnpm reseed:construction
 ```
 
 ### Creating a New Preset
@@ -203,6 +217,307 @@ Use the Payload CMS admin panel (`/admin`) to manage all site content:
 | **SiteSettings** | Update company name, logo, contact info, social links |
 | **Categories** | Shared taxonomy for posts |
 | **Media** | Image uploads with generated sizes (thumbnail, card, hero) |
+
+## How to Add a New Collection
+
+Adding a new collection (e.g., Testimonials, Products, Team Members) involves three steps: defining the schema, registering it, and creating a frontend route.
+
+### 1. Create the Collection Schema
+
+Create a new file in `src/collections/` — e.g., `Testimonials.ts`:
+
+```tsx
+import type { CollectionConfig } from 'payload'
+
+export const Testimonials: CollectionConfig = {
+  slug: 'testimonials',
+  admin: {
+    useAsTitle: 'authorName',
+    defaultColumns: ['authorName', 'company', 'rating'],
+  },
+  access: {
+    read: () => true,
+  },
+  fields: [
+    {
+      name: 'authorName',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'company',
+      type: 'text',
+    },
+    {
+      name: 'rating',
+      type: 'number',
+      min: 1,
+      max: 5,
+    },
+    {
+      name: 'quote',
+      type: 'textarea',
+      required: true,
+    },
+    {
+      name: 'avatar',
+      type: 'upload',
+      relationTo: 'media',
+    },
+  ],
+}
+```
+
+### 2. Register It in `payload.config.ts`
+
+```tsx
+import { Testimonials } from './collections/Testimonials'
+
+export default buildConfig({
+  collections: [Users, Media, Categories, Services, Posts, Pages, Testimonials],
+  // ...
+})
+```
+
+### 3. Generate Types and Create a Frontend Route
+
+```bash
+npm run generate:types
+```
+
+Then create a page at `src/app/(frontend)/testimonials/page.tsx` that fetches and displays the data. See [How to Add a New Page](#how-to-add-a-new-page) for the pattern.
+
+### 4. Add to a Seed Preset (Optional)
+
+Add a `testimonials` array to the `SeedPreset` interface in `src/seed/presets/types.ts`, implement it in each preset file, and the seed script will populate them automatically.
+
+## How to Add Fields to Existing Collections
+
+Adding a new field to a collection is a two-step process: update the schema, then regenerate types.
+
+### Example: Add a `phone` field to Services
+
+1. **Edit the collection schema** in `src/collections/Services.ts`:
+
+```tsx
+fields: [
+  // ... existing fields
+  {
+    name: 'phone',
+    type: 'text',
+  },
+]
+```
+
+2. **Regenerate TypeScript types**:
+
+```bash
+npm run generate:types
+```
+
+3. **Run the dev server** — Payload will auto-migrate the database on startup:
+
+```bash
+npm run dev
+```
+
+The new field will appear in the admin panel immediately. Existing documents will have `null` for the new field.
+
+> **Important:** After adding fields, always run `npm run generate:types` to keep `payload-types.ts` in sync. The admin panel won't show the field until the types are regenerated and the server restarts.
+
+## Component Library
+
+All components are **Server Components** (no `"use client"` directive) and use named exports.
+
+### UI Primitives (`src/components/ui/`)
+
+These are small, reusable building blocks with no business logic. They encode design tokens (spacing, radius, shadow, type scale) in one place.
+
+| Component | Props | Description |
+|-----------|-------|-------------|
+| `Button` | `children`, `variant?: "primary" \| "secondary" \| "outline"`, `size?: "sm" \| "md" \| "lg"`, `className?`, `icon?`, `iconPosition?`, plus either `href` (link) or `onClick` (native button) | Renders as `<a>` when `href` is provided, `<button>` otherwise |
+| `Card` | `children`, `className?`, `href?`, `as?: "div" \| "a"` | Wrapper with consistent padding, border radius, and shadow |
+| `Container` | `children`, `className?` | Max-width centered container |
+| `Heading` | `children`, `level?: 1 \| 2 \| 3 \| 4`, `className?` | Semantic heading with consistent type scale |
+| `Section` | `children`, `className?`, `id?` | Vertical spacing wrapper with optional anchor ID |
+
+**Usage example:**
+
+```tsx
+import { Button, Card, Container, Heading, Section } from '@/components/ui'
+
+<Section id="services">
+  <Container>
+    <Heading level={2}>Our Services</Heading>
+    <Card href="/services/web-design">
+      <Heading level={3}>Web Design</Heading>
+      <p>Beautiful, responsive websites.</p>
+      <Button variant="primary" size="sm">Learn More</Button>
+    </Card>
+  </Container>
+</Section>
+```
+
+### Page Blocks (`src/components/blocks/`)
+
+Composed page sections built from `ui/` primitives. These are what actual pages assemble.
+
+| Block | Props | Description |
+|-------|-------|-------------|
+| `Hero` | `badgeText?`, `title`, `subtitle?`, `ctaPrimary?: { label, href }`, `ctaSecondary?: { label, href }`, `backgroundImage?: { url, alt }`, `className?` | Full-width hero with optional background image and CTAs |
+| `PageHero` | `badgeText?`, `title`, `subtitle?`, `breadcrumb?: { label, href }[]`, `variant?: "full" \| "compact"`, `className?` | Hero for inner pages with optional breadcrumb trail |
+| `StatsSection` | `stats: { value, label }[]`, `className?` | Horizontal row of statistics/numbers |
+| `ServiceGrid` | `services: { id, title, shortDescription, slug, icon? }[]`, `title?`, `subtitle?`, `sectionLabel?`, `viewAllHref?`, `viewAllLabel?`, `readMoreLabel?`, `className?` | Grid of service cards with optional "View All" link |
+| `PostGrid` | `posts: { id, title, slug, type, excerpt?, publishedAt?, featuredImage? }[]`, `title?`, `subtitle?`, `sectionLabel?`, `className?`, `columns?: 2 \| 3 \| 4` | Grid of post cards with configurable columns |
+| `CTASection` | `title`, `description`, `primaryButton?: { label, href }`, `secondaryButton?: { label, href }`, `className?` | Call-to-action banner |
+| `RichText` | `content: any`, `className?` | Renders Lexical rich text from Payload CMS |
+| `ServiceSidebar` | `contactLabel?`, `contactDescription?`, `primaryButtonLabel?`, `primaryButtonHref?`, `secondaryButtonLabel?`, `secondaryButtonHref?` | Sidebar with contact info for service detail pages |
+| `EmptyState` | `message?`, `className?` | Placeholder shown when no data is available |
+
+**Composition pattern** — pages should mostly compose blocks, not write raw markup:
+
+```tsx
+import { Hero, StatsSection, ServiceGrid, PostGrid, CTASection } from '@/components/blocks'
+
+export default async function LandingPage() {
+  const payload = await getPayload({ config })
+  const landing = await payload.findGlobal({ slug: 'landing' })
+  // ... fetch services, posts
+
+  return (
+    <main>
+      <Hero title={landing.heroTitle} subtitle={landing.heroSubtitle} />
+      <StatsSection stats={landing.stats} />
+      <ServiceGrid services={services} title="Our Services" />
+      <PostGrid posts={posts} title="Latest Articles" columns={3} />
+      <CTASection title="Get Started" description="Contact us today." />
+    </main>
+  )
+}
+```
+
+## Local API Usage Patterns
+
+All frontend pages use Payload's **Local API** (not REST/GraphQL). This runs server-side with full database access and no HTTP overhead.
+
+### Basic Patterns
+
+```tsx
+import { getPayload } from 'payload'
+import config from '@/payload.config'
+
+// Fetch a list of documents
+const payload = await getPayload({ config })
+const { docs } = await payload.find({
+  collection: 'services',
+  limit: 10,
+  sort: 'order',
+})
+
+// Fetch a single document by slug
+const { docs } = await payload.find({
+  collection: 'pages',
+  where: { slug: { equals: 'about-us' } },
+})
+const page = docs[0]
+
+// Fetch a global
+const siteSettings = await payload.findGlobal({ slug: 'site-settings' })
+
+// Fetch with depth (populates relationships)
+const { docs } = await payload.find({
+  collection: 'posts',
+  depth: 1, // populates category relationship
+  where: { status: { equals: 'published' } },
+})
+```
+
+### Common Query Patterns in This Project
+
+| Pattern | Where Used |
+|---------|-----------|
+| `payload.find({ collection, where: { slug: { equals } } })` | Every `[slug]` route page |
+| `payload.find({ collection, where: { status: { equals: 'published' } } })` | Post listing, footer recent posts |
+| `payload.findGlobal({ slug })` | Layout (site settings), landing page |
+| `payload.find({ collection, sort, limit })` | Service grid, post grid |
+
+### Disabling Cache
+
+All pages use `export const dynamic = 'force-dynamic'` to ensure fresh data on every request. Remove this if you want static generation for a specific page.
+
+## Deployment
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure for production:
+
+```env
+DATABASE_URI=postgresql://user:password@host:5432/compro
+PAYLOAD_SECRET=<generate-a-strong-random-secret>
+NEXT_PUBLIC_SITE_NAME=Your Company Name
+NEXT_PUBLIC_COLOR_PRIMARY=#0B2545
+NEXT_PUBLIC_COLOR_ACCENT=#2CB1BC
+```
+
+### Build and Start
+
+```bash
+npm run build
+npm start
+```
+
+### Vercel Deployment
+
+1. Push to GitHub/GitLab/Bitbucket
+2. Import the repository in Vercel dashboard
+3. Set environment variables in Vercel project settings
+4. Vercel will auto-detect Next.js and deploy
+
+> **Note:** For Vercel, you need an external PostgreSQL database (e.g., Vercel Postgres, Supabase, Neon). Update `DATABASE_URI` accordingly.
+
+### Self-Hosted (VPS/Server)
+
+```bash
+# On the server
+git clone <repo-url> && cd compro
+cp .env.example .env  # edit with production values
+npm install
+npm run build
+npm start
+```
+
+Use a process manager like **PM2** to keep the app running:
+
+```bash
+pm2 start npm --name "compro" -- start
+pm2 save
+pm2 startup
+```
+
+### Database Migrations
+
+After deploying code changes that modify collection schemas:
+
+```bash
+npm run migrate
+```
+
+Payload also auto-runs pending migrations on `npm run dev` and `npm run build`.
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `Cannot find module '@payloadcms/...'` | Run `npm install` to reinstall dependencies |
+| Admin panel shows no collections | Ensure `payload.config.ts` imports and registers all collections in the `collections` array |
+| `payload-types.ts` is outdated | Run `npm run generate:types` after changing any collection/global schema |
+| Tailwind styles not loading | Ensure `@import "tailwindcss"` is only in `src/app/(frontend)/layout.tsx`, not in the `(payload)` layout |
+| Media images show 404 | Run `npm run dev` — Payload auto-creates the `media/` directory on first upload |
+| Seed script fails with duplicate errors | The seed script clears existing data before inserting. If it still fails, drop and recreate the database, then re-run migrations and seed |
+| `GENERATE:Types` command not found | Run `npm run generate:types` (script name uses a colon, not a dash) |
+| Frontend page shows no content | Check that the page slug in the CMS matches the `where: { slug: { equals: '...' } }` query in your route file |
+| Lexical rich text renders empty | Ensure the rich text content has `root.type: "root"` (not `"block"`) and heading nodes have `version` property only once |
+| `setup.sh` fails on `docker compose` | Ensure Docker Desktop is running. On Linux, you may need `sudo docker compose up -d` |
 
 ## Manual Setup (Without `setup.sh`)
 

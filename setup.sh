@@ -28,6 +28,9 @@ fi
 # ─── Step 2: PostgreSQL via Docker Compose ───────────────────────────────────
 info "Starting PostgreSQL container..."
 docker compose up -d db
+info "Cleaning up database (dropping & recreating)..."
+docker exec compro-db psql -U postgres -c "DROP DATABASE IF EXISTS compro WITH (FORCE);" > /dev/null 2>&1
+docker exec compro-db psql -U postgres -c "CREATE DATABASE compro;" > /dev/null 2>&1
 info "Waiting for database to be ready..."
 until docker exec compro-db pg_isready -U postgres -d compro > /dev/null 2>&1; do
   sleep 2
@@ -46,7 +49,7 @@ $PNPM generate:importmap
 # ─── Step 5: Seed database ───────────────────────────────────────────────────
 SEED_PRESET="${1:-generic}"
 info "Seeding database with preset: $SEED_PRESET..."
-PRESET="$SEED_PRESET" $PNPM seed
+PRESET="$SEED_PRESET" npx --yes pnpm@10 seed
 
 # ─── Done ────────────────────────────────────────────────────────────────────
 echo ""

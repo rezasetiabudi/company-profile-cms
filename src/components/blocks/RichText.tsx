@@ -64,10 +64,10 @@ function renderChildren(children: any[]): React.ReactNode[] {
     if (child.type === 'text') {
       let text: React.ReactNode = child.text
 
-      if (child.format && child.format.includes(1)) {
+      if ((child.format & 1) !== 0) {
         text = <strong key={index}>{text}</strong>
       }
-      if (child.format && child.format.includes(2)) {
+      if ((child.format & 2) !== 0) {
         text = <em key={index}>{text}</em>
       }
 
